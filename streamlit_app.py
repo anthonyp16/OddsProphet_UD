@@ -19,7 +19,7 @@ st.set_page_config(
 
 def get_time():
     service_account_info = st.secrets["gcp_service_account"]
-    gc = pygsheets.authorize(service_account_file=service_account_info)
+    gc = pygsheets.authorize(client_secret=service_account_info)
     sh = gc.open('Odds_Tool')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
     return updated_time.strftime("%-m/%-d/%y %I:%M %p %Z")
