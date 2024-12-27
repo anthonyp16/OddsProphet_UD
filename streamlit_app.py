@@ -40,7 +40,7 @@ def load_data(sheets_url):
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
     return pd.read_csv(csv_url), 
 
-df = load_data(st.secrets['public_gsheets_url'])
+df = load_data(st.secrets['public_gsheets_url'])[0]
 st.dataframe(df)
 df.columns = df.columns.str.replace('Over', 'O')
 df.columns = df.columns.str.replace('Under', 'U')
