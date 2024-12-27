@@ -69,7 +69,7 @@ def highlight_row(row, columns):
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     
-    st.subheader("PrizePicks Props")
+    st.subheader("Underdog Fantasy Props")
     
     # Convert datetimes once
     for col in df.columns:
