@@ -150,7 +150,7 @@ with dataset:
 
     def highlight_top_10(val):
         if top_10_thresh is not None and val >= top_10_thresh:
-            return "color: mediumseagreen; font-weight: bold;"
+            return "color: limegreen; font-weight: bold;"
         return ""
 
     # Format dictionary
