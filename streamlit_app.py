@@ -43,7 +43,7 @@ def load_data(sheets_url):
     return pd.read_csv(csv_url), 
 
 df = load_data(st.secrets['public_gsheets_url'])[0]
-st.dataframe(df)
+
 df.columns = df.columns.str.replace('Over', 'O')
 df.columns = df.columns.str.replace('Under', 'U')
 
