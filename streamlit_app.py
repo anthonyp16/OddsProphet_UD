@@ -19,7 +19,7 @@ st.set_page_config(
 
 def get_time():
     gc = pygsheets.authorize(service_file='oddstool-fdc41ddfa8e3.json')
-    sh = gc.open('Odds_Tool')
+    sh = gc.open('UD_OddsProphet')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
     return updated_time.strftime("%-m/%-d/%y %I:%M %p %Z")
 
