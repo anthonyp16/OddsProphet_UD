@@ -24,7 +24,7 @@ def get_time():
     gc = pygsheets.authorize(service_account_info=service_account_info)
     sh = gc.open('Odds_Tool')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
-    return updated_time.strftime("%-m/%-d/%y %I:%M %p %Z")
+    return NULL
 
 col1, col2, col3 = st.columns(3)
 st.title("Odds:blue[Prophet]")
