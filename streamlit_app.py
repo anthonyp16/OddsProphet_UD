@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 def get_time():
-    service_account_info = st.secrets["gcp_service_account"][0]
+    service_account_info = st.secrets["gcp_service_account"]
     gc = pygsheets.authorize(service_account_info=service_account_info)
     sh = gc.open('UD_OddsProphet')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
@@ -40,7 +40,7 @@ def load_data(sheets_url):
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
     return pd.read_csv(csv_url), 
 
-df = load_data(st.secrets["public_gsheets_url"])[0]
+df = load_data(st.secrets["public_gsheets_url"])
 
 df.columns = df.columns.str.replace('Over', 'O')
 df.columns = df.columns.str.replace('Under', 'U')
