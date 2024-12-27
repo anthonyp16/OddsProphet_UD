@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 def get_time():
-    service_account_info = st.secrets["gcp_service_account"]
+    service_account_info = st.secrets["gcp_service_account"][0]
     gc = pygsheets.authorize(service_account_info=service_account_info)
     sh = gc.open('UD_OddsProphet')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
