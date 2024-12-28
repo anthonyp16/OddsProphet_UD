@@ -22,7 +22,7 @@ def get_time():
     service_account_info = dict(st.secrets["gcp_service_account"])
     
     gc = pygsheets.authorize(service_account_info=service_account_info)
-    sh = gc.open('Odds_Tool')
+    sh = gc.open('UD_OddsProphet')
     updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
     return NULL
 
