@@ -210,7 +210,7 @@ with dataset:
 
         # Payout structures
         power_payouts = {
-            2: 3, 3: 5, 4: 10, 5: 20, 6: 37.5
+            2: 3, 3: 6, 4: 10, 5: 20, 6: 37.5
         }
 
         flex_payouts = {
