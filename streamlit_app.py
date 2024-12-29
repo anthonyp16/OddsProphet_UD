@@ -243,9 +243,9 @@ with dataset:
 
         # Display results
         if power_ev is not None:
-            container.write(f"**Power Play EV:** {power_ev:.2f}")
+            container.write(f"**Standard Play EV:** {power_ev:.2f}")
         else:
-            container.write("**Power Play** not available for this number of picks.")
+            container.write("**Standard Play** not available for this number of picks.")
 
         if flex_ev is not None:
             container.write(f"**Flex Play EV:** {flex_ev:.2f}")
