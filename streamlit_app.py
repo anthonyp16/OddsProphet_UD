@@ -183,7 +183,7 @@ with dataset:
 
     # Get selected rows from the event
     selected_rows = event.selection.rows if event.selection is not None else []
-    selected_bets = displayed_df.iloc[selected_rows] if len(selected_rows) > 0 else pd.DataFrame()
+    selected_bets = displayed_df.iloc[selected_rows, :7] if len(selected_rows) > 0 else pd.DataFrame()
     st.caption(f":gray[Last Updated:] ")
     st.divider()
 
