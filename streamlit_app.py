@@ -237,7 +237,7 @@ with dataset:
             flex_ev = None
 
         st.text("Selected Bets:")
-        st.dataframe(selected_bets, use_container_width=True, hide_index=True)
+        st.table(selected_bets, use_container_width=True, hide_index=True)
         container = st.container(border=True)
 
 
