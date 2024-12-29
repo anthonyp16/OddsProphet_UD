@@ -46,7 +46,7 @@ df = load_data(st.secrets['public_gsheets_url'])[0]
 
 df.columns = df.columns.str.replace('Over', 'O')
 df.columns = df.columns.str.replace('Under', 'U')
-
+df['Start'] = df['Start'].dt.strftime('%I %p')
 sportsbooks =  df.columns[df.columns.get_loc('Best Odds')+1:-1].to_list()
 
 dataset = st.container()
