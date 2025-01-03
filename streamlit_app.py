@@ -37,7 +37,7 @@ with r_col1:
 with r_col2:
     show_sportsbooks = st.checkbox("Show Sportsbook Columns", value=False)
 
-@st.cache_data(ttl="5m")
+@st.cache_data(ttl="4m")
 def load_data(sheets_url):
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
     return pd.read_csv(csv_url), 
