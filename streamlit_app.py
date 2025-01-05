@@ -241,15 +241,21 @@ with dataset:
         st.dataframe(selected_bets,hide_index=True, use_container_width=True)
         container = st.container(border=True)
 
-
         # Display results
         if power_ev is not None:
-            container.write(f"**Standard Play EV:** {power_ev:.2f}")
+            if power_ev > 0:
+                container.write(
+                    f"**Power Play EV:** :blue[{power_ev:.2f}]")
+            else:
+                container.write(f"**Power Play EV:** {power_ev:.2f}")
         else:
-            container.write("**Standard Play** not available for this number of picks.")
-
+            container.write("**Power Play** not available for this number of picks.")
         if flex_ev is not None:
-            container.write(f"**Flex Play EV:** {flex_ev:.2f}")
+            if flex_ev > 0:
+                container.write(
+                    f"**Flex Play EV:** :blue[{flex_ev:.2f}]")
+            else:
+                container.write(f"**Flex Play EV:** {flex_ev:.2f}")
         else:
             container.write("**Flex Play** not available for this number of picks.")
 
