@@ -1,10 +1,11 @@
-import streamlit as st
-import pandas as pd
 import math
-import json
 from itertools import combinations
-import pygsheets
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import pandas as pd
+import pygsheets
+import streamlit as st
 from pandas.api.types import (
     is_categorical_dtype,
     is_datetime64_any_dtype,
@@ -12,52 +13,46 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
+# --------------------
+# Streamlit Page Setup
+# --------------------
 st.set_page_config(
     page_title="OddsProphet | Dashboard",
     page_icon="💰",
     layout="wide"
 )
-
-def get_time():
-    service_account_info = dict(st.secrets["gcp_service_account"])
-    
-    gc = pygsheets.authorize(service_account_info=service_account_info)
-    sh = gc.open('UD_OddsProphet')
-    updated_time = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
-    return NULL
-
-col1, col2, col3 = st.columns(3)
 st.title("Odds:blue[Prophet]")
 st.divider()
 
-r_col1, r_col2 = st.columns([1,1])
+# ---------------------
+# Utility & Data Loader
+# ---------------------
+def get_sheet_update_time() -> str:
 
-with r_col1:
-    modify = st.checkbox("Create filters")
-with r_col2:
-    show_sportsbooks = st.checkbox("Show Sportsbook Columns", value=False)
+    gc = pygsheets.authorize(service_file="oddstool-fdc41ddfa8e3.json")
+    sh = gc.open("Odds_Tool")
+    updated_time_utc = datetime.fromisoformat(sh.updated.replace("Z", "+00:00"))
+    eastern_time = updated_time_utc.astimezone(ZoneInfo("America/New_York"))
+    return eastern_time.strftime("%-m/%-d/%y %I:%M %p %Z")
 
 @st.cache_data(ttl="4m")
-def load_data(sheets_url):
+def load_data(sheets_url: str):
+
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
-    return pd.read_csv(csv_url), 
+    df = pd.read_csv(csv_url)
+    #last_updated_str = get_sheet_update_time()
+    return df, last_updated_str
 
-df = load_data(st.secrets['public_gsheets_url'])[0]
-
-df.columns = df.columns.str.replace('Over', 'O')
-df.columns = df.columns.str.replace('Under', 'U')
-df['Start'] = pd.to_datetime(df['Start'])
-df['Start'] = df['Start'].dt.strftime("%a %I:%M %p")
-sportsbooks =  df.columns[df.columns.get_loc('Best Odds')+1:-1].to_list()
-
-dataset = st.container()
-
+# --------------------
+# Highlighting Helpers
+# --------------------
 def highlight_row(row, columns):
+
     bg_colors = [''] * len(columns)
     pairs = len(columns) // 2
     for i in range(pairs):
         over_val = row[2*i]
-        under_val = row[2*i+1]
+        under_val = row[2*i + 1]
         if '.1' in str(over_val) or '.1' in str(under_val):
             bg_colors[2*i:2*i+2] = ['background-color: orange']*2
         elif over_val < under_val:
@@ -67,17 +62,15 @@ def highlight_row(row, columns):
     return bg_colors
 
 def highlight_above_val(val):
-    """
-    Highlights values >= 53.7% in Probability column.
-    """
     return "color: springgreen; font-weight: bold;" if val >= 53.7 else ""
 
+# --------------------
+# Data Filtering
+# --------------------
+def filter_dataframe(df: pd.DataFrame, enable_filter: bool) -> pd.DataFrame:
+    st.subheader("PrizePicks Props")
 
-def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    
-    st.subheader("Underdog Fantasy Props")
-    
-    # Convert datetimes once
+    # Convert datetime columns once
     for col in df.columns:
         if is_object_dtype(df[col]):
             try:
@@ -87,100 +80,99 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         if is_datetime64_any_dtype(df[col]):
             df[col] = df[col].dt.tz_localize(None)
 
-    if not modify:
+    if not enable_filter:
         return df
 
-    modification_container = st.container()
-    with modification_container:
-        filter_cols = ['Sport', 'Favorite', 'Probability', 'Best Odds', 'Start']
-        to_filter_columns = st.multiselect("Choose a column to filter on", df[filter_cols].columns)
-        
-        filtered_df = df.copy()
-        for column in to_filter_columns:
-            # Treat columns with <10 unique as categorical
-            if is_categorical_dtype(filtered_df[column]) or filtered_df[column].nunique() < 10:
-                user_cat_input = st.multiselect(
-                    f"Values for {column}",
-                    filtered_df[column].unique(),
-                    default=list(filtered_df[column].unique())
-                )
-                filtered_df = filtered_df[filtered_df[column].isin(user_cat_input)]
-            elif is_numeric_dtype(filtered_df[column]):
-                _min = float(filtered_df[column].min())
-                _max = float(filtered_df[column].max())
-                step = (_max - _min) / 100 if _max != _min else 1
-                user_num_input = st.slider(
-                    f"Values for {column}",
-                    min_value=_min,
-                    max_value=_max,
-                    value=(_min, _max),
-                    step=step,
-                )
-                filtered_df = filtered_df[filtered_df[column].between(*user_num_input)]
-            elif is_datetime64_any_dtype(filtered_df[column]):
-                user_date_input = st.date_input(
-                    f"Values for {column}",
-                    value=(filtered_df[column].min(), filtered_df[column].max()),
-                )
-                if len(user_date_input) == 2:
-                    start_date, end_date = map(pd.to_datetime, user_date_input)
-                    filtered_df = filtered_df.loc[filtered_df[column].between(start_date, end_date)]
-            else:
-                user_text_input = st.text_input(
-                    f"Search for {column} (Case sensitive)",
-                )
-                if user_text_input:
-                    filtered_df = filtered_df[filtered_df[column].astype(str).str.contains(user_text_input)]
+    filter_cols = ['Sport', 'Favorite', 'Probability', 'Best Odds', 'Start']
+    to_filter = st.multiselect("Choose columns to filter", df[filter_cols].columns)
 
-        return filtered_df
+    filtered_df = df.copy()
+    for column in to_filter:
+        if is_categorical_dtype(filtered_df[column]) or filtered_df[column].nunique() < 10:
+            user_cat_input = st.multiselect(
+                f"{column}",
+                filtered_df[column].unique(),
+                default=list(filtered_df[column].unique())
+            )
+            filtered_df = filtered_df[filtered_df[column].isin(user_cat_input)]
+        elif is_numeric_dtype(filtered_df[column]):
+            _min, _max = float(filtered_df[column].min()), float(filtered_df[column].max())
+            step = (_max - _min) / 100 if _max != _min else 1
+            user_num_input = st.slider(
+                f"{column}",
+                min_value=_min,
+                max_value=_max,
+                value=(_min, _max),
+                step=step,
+            )
+            filtered_df = filtered_df[filtered_df[column].between(*user_num_input)]
+        elif is_datetime64_any_dtype(filtered_df[column]):
+            user_date_input = st.date_input(
+                f"{column}",
+                value=(filtered_df[column].min(), filtered_df[column].max()),
+            )
+            if len(user_date_input) == 2:
+                start_date, end_date = map(pd.to_datetime, user_date_input)
+                filtered_df = filtered_df.loc[filtered_df[column].between(start_date, end_date)]
+        else:
+            user_text_input = st.text_input(f"Search in {column} (Case sensitive)")
+            if user_text_input:
+                filtered_df = filtered_df[filtered_df[column].astype(str).str.contains(user_text_input)]
+    return filtered_df
 
+# ---------------------------
+# Main Layout & Data Retrieval
+# ---------------------------
+col1, col2, col3 = st.columns(3)
+r_col1, r_col2 = st.columns([1, 1])
+with r_col1:
+    modify = st.checkbox("Create filters")
+with r_col2:
+    show_sportsbooks = st.checkbox("Show Sportsbook Columns", value=False)
 
-with dataset:
-    final = filter_dataframe(df)
+df, last_updated_str = load_data(st.secrets["public_gsheets_url"])
+df.columns = df.columns.str.replace('Over', 'O')
+df.columns = df.columns.str.replace('Under', 'U')
+sportsbooks = df.columns[df.columns.get_loc('Best Odds')+1:-1].to_list()
 
-    # Toggle to show/hide sportsbook columns
+# -------------
+# Filter & Show
+# -------------
+filtered_df = filter_dataframe(df, enable_filter=modify)
+displayed_df = filtered_df.copy()
+displayed_sportsbooks = sportsbooks.copy()
 
+# Optionally hide sportsbooks
+if not show_sportsbooks:
+    displayed_df.drop(columns=sportsbooks, inplace=True)
+    displayed_sportsbooks = []
 
-    # If user decides to hide them, drop sportsbook columns
-    displayed_df = final.copy()
-    displayed_sportsbooks = sportsbooks.copy()
+# Styling
+format_dict = {'Line': '{:.1f}', 'Probability': '{:.1f}%', 'Best Odds': '{:.0f}'}
+format_dict.update({col: '{:.0f}' for col in displayed_sportsbooks})
+styled_df = displayed_df.style.format(format_dict)
 
-    if not show_sportsbooks:
-        displayed_df = displayed_df.drop(columns=sportsbooks)
-        displayed_sportsbooks = []
-
-    # Format dictionary
-    format_dict = {'Line': '{:.1f}', 'Probability': '{:.1f}%', 'Best Odds': '{:.0f}'}
-    format_dict.update({col: '{:.0f}' for col in displayed_sportsbooks})
-
-    styled_df = displayed_df.style.format(format_dict)
-
-    if displayed_sportsbooks:
-        styled_df = styled_df.apply(
-            lambda row: highlight_row(row, displayed_sportsbooks),
-            axis=1,
-            subset=displayed_sportsbooks
-        )
-
-    # Apply top 10% probability highlight if Probability column is available
-    if 'Probability' in displayed_df.columns:
-        styled_df = styled_df.applymap(highlight_top_10, subset=['Probability'])
-
-    # Create the selectable dataframe event
-    event = st.dataframe(
-        styled_df,
-        use_container_width=True,
-        hide_index=True,
-        on_select="rerun",      # Re-run app on selection
-        selection_mode="multi-row"  # Enable multi-row selection
+if displayed_sportsbooks:
+    styled_df = styled_df.apply(
+        lambda row: highlight_row(row, displayed_sportsbooks),
+        axis=1,
+        subset=displayed_sportsbooks
     )
+if 'Probability' in displayed_df.columns:
+    styled_df = styled_df.applymap(highlight_above_val, subset=['Probability'])
 
-    # Get selected rows from the event
-    selected_rows = event.selection.rows if event.selection is not None else []
-    selected_bets = displayed_df.iloc[selected_rows, :7] if len(selected_rows) > 0 else pd.DataFrame()
-    st.caption(f":gray[Last Updated:] ")
-    st.divider()
-
+# Selectable data
+event = st.dataframe(
+    styled_df,
+    use_container_width=True,
+    hide_index=True,
+    on_select="rerun",      # Re-run app on selection
+    selection_mode="multi-row"  # Enable multi-row selection
+)
+selected_rows = event.selection.rows if event.selection is not None else []
+selected_bets = displayed_df.iloc[selected_rows, :7] if len(selected_rows) > 0 else pd.DataFrame()
+st.caption(f":gray[Last Updated:] ")
+st.divider()
 
 # -----------------------------
 # EV Calculator & Probability
