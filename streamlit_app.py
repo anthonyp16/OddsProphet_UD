@@ -66,6 +66,11 @@ def highlight_row(row, columns):
             bg_colors[2*i:2*i+2] = ['background-color: #644EC7']*2
     return bg_colors
 
+def highlight_above_val(val):
+    """
+    Highlights values >= 53.7% in Probability column.
+    """
+    return "color: springgreen; font-weight: bold;" if val >= 53.7 else ""
 
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -129,6 +134,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
         return filtered_df
 
+
 with dataset:
     final = filter_dataframe(df)
 
@@ -143,28 +149,16 @@ with dataset:
         displayed_df = displayed_df.drop(columns=sportsbooks)
         displayed_sportsbooks = []
 
-    # Determine top 10% threshold for Probability column (if it exists)
-    if 'Probability' in displayed_df.columns and pd.api.types.is_numeric_dtype(displayed_df['Probability']):
-        top_10_thresh = displayed_df['Probability'].quantile(0.89)
-    else:
-        top_10_thresh = None
-
-    def highlight_top_10(val):
-        if top_10_thresh is not None and val >= top_10_thresh:
-            return "color: springgreen; font-weight: bold;"
-        return ""
-
     # Format dictionary
     format_dict = {'Line': '{:.1f}', 'Probability': '{:.1f}%', 'Best Odds': '{:.0f}'}
     format_dict.update({col: '{:.0f}' for col in displayed_sportsbooks})
 
     styled_df = displayed_df.style.format(format_dict)
 
-    # Apply sportsbook highlights only if sportsbooks are visible
     if displayed_sportsbooks:
         styled_df = styled_df.apply(
             lambda row: highlight_row(row, displayed_sportsbooks),
-            axis=1, 
+            axis=1,
             subset=displayed_sportsbooks
         )
 
