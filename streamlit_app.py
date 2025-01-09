@@ -35,6 +35,7 @@ def load_data(sheets_url: str):
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
     df = pd.read_csv(csv_url)
     #last_updated_str = get_sheet_update_time()
+    last_updated_str = "placeholder"
     return df, last_updated_str
 
 # --------------------
