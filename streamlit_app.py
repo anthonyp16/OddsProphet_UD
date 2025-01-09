@@ -188,76 +188,87 @@ with dataset:
     st.divider()
 
 
-# EV Calculator Section
-    st.subheader("Expected Value Calculator")
-    num_picks = len(selected_bets)
-    bet_amount = st.number_input("Bet Amount ($)", min_value=5, value=10, format="%d")
-    if num_picks > 0:
-        probs = (selected_bets['Probability'] / 100).values
-        p_all = math.prod(probs)
+# -----------------------------
+# EV Calculator & Probability
+# -----------------------------
+st.subheader("Expected Value Calculator")
+bet_amount = st.number_input("Bet Amount ($)", min_value=5, value=10, format="%d")
 
-        # Helper for probability of exactly k correct
-        def prob_exact_k(probs, k):
-            total = 0
-            for combo in combinations(range(len(probs)), k):
-                p = 1
-                for i in range(len(probs)):
-                    if i in combo:
-                        p *= probs[i]
-                    else:
-                        p *= (1 - probs[i])
-                total += p
-            return total
+sim_col1, sim_col2 = st.columns(2)
+with sim_col1:
+    simulate_free_square = st.checkbox("Simulate Free Square", value=False)
+with sim_col2:
+    simulate_taco = st.checkbox("Simulate Taco :taco:", value=False)
 
-        # Payout structures
-        power_payouts = {
-            2: 3, 3: 6, 4: 10, 5: 20
-        }
+max_picks = 6
+current_picks = len(selected_bets)
+available_spots = max_picks - current_picks
 
-        flex_payouts = {
-            3: {3:3, 2:1},
-            4: {4:6, 3:1.5},
-            5: {5:10, 4:2.5},
-            6: {6:25, 5:2.6, 4:0.25}
-        }
+if available_spots <= 0:
+    st.warning("You already have 6 picks. Cannot add more.")
+else:
+    if simulate_free_square and available_spots > 0:
+        new_row = pd.DataFrame([{"Sport": "SIMULATED FREE SQUARE", "Probability": 99.0}])
+        selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
+        available_spots -= 1
+    if simulate_taco and available_spots > 0:
+        new_row = pd.DataFrame([{"Sport": "SIMULATED TACO", "Probability": 63.0}])
+        selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
+        available_spots -= 1
 
-        # Calculate EV for power play
-        if num_picks in power_payouts:
-            power_ev = bet_amount * (power_payouts[num_picks]*p_all - 1)
-        else:
-            power_ev = None
+num_picks = len(selected_bets)
 
-        # Calculate EV for flex play (if defined)
-        if num_picks in flex_payouts:
-            flex_expected_mult = 0
-            for k, mult in flex_payouts[num_picks].items():
-                flex_expected_mult += prob_exact_k(probs, k)*mult
-            # EV = sum(prob(k)*mult(k)*100) - 100
-            flex_ev = bet_amount * (flex_expected_mult - 1)
-        else:
-            flex_ev = None
+if num_picks > 0:
+    # Convert probabilities to fractions
+    probs = (selected_bets['Probability'] / 100).values
+    p_all = math.prod(probs)  # Probability of all correct
 
-        st.text("Selected Bets:")
-        st.dataframe(selected_bets,hide_index=True, use_container_width=True)
-        container = st.container(border=True)
+    def prob_exact_k(prbs, k):
+        total = 0
+        for combo in combinations(range(len(prbs)), k):
+            p = 1
+            for i in range(len(prbs)):
+                p *= prbs[i] if i in combo else (1 - prbs[i])
+            total += p
+        return total
 
-        # Display results
-        if power_ev is not None:
-            if power_ev > 0:
-                container.write(
-                    f"**Power Play EV:** :blue[{power_ev:.2f}]")
-            else:
-                container.write(f"**Power Play EV:** {power_ev:.2f}")
-        else:
-            container.write("**Power Play** not available for this number of picks.")
-        if flex_ev is not None:
-            if flex_ev > 0:
-                container.write(
-                    f"**Flex Play EV:** :blue[{flex_ev:.2f}]")
-            else:
-                container.write(f"**Flex Play EV:** {flex_ev:.2f}")
-        else:
-            container.write("**Flex Play** not available for this number of picks.")
+    power_payouts = {2: 3, 3: 5, 4: 10, 5: 20, 6: 37.5}
+    flex_payouts = {
+        3: {3: 2.25, 2: 1.25},
+        4: {4: 5,    3: 1.5},
+        5: {5: 10,   4: 2,    3: 0.4},
+        6: {6: 25,   5: 2,    4: 0.4}
+    }
 
+    power_ev = bet_amount * (power_payouts[num_picks] * p_all - 1) if num_picks in power_payouts else None
+
+    if num_picks in flex_payouts:
+        flex_expected_mult = 0
+        for k, mult in flex_payouts[num_picks].items():
+            flex_expected_mult += prob_exact_k(probs, k) * mult
+        flex_ev = bet_amount * (flex_expected_mult - 1)
     else:
-        st.write("No bets selected. Please select rows above to calculate Expected Value.")
+        flex_ev = None
+
+    st.text("Selected Bets:")
+    st.dataframe(selected_bets, use_container_width=True, hide_index=True)
+
+    container = st.container()
+
+    # Show Power EV
+    if power_ev is not None:
+        container.write(
+            f"**Power Play EV:** {' :blue[{:.2f}]'.format(power_ev) if power_ev > 0 else f'{power_ev:.2f}'}"
+        )
+    else:
+        container.write("**Power Play** not available for this number of picks.")
+
+    # Show Flex EV
+    if flex_ev is not None:
+        container.write(
+            f"**Flex Play EV:** {' :blue[{:.2f}]'.format(flex_ev) if flex_ev > 0 else f'{flex_ev:.2f}'}"
+        )
+    else:
+        container.write("**Flex Play** not available for this number of picks.")
+else:
+    st.write("No bets selected. Please select rows above to calculate Expected Value.")
