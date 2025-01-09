@@ -13,9 +13,6 @@ from pandas.api.types import (
     is_object_dtype,
 )
 
-# --------------------
-# Streamlit Page Setup
-# --------------------
 st.set_page_config(
     page_title="OddsProphet | Dashboard",
     page_icon="💰",
@@ -24,9 +21,6 @@ st.set_page_config(
 st.title("Odds:blue[Prophet]")
 st.divider()
 
-# ---------------------
-# Utility & Data Loader
-# ---------------------
 def get_sheet_update_time() -> str:
 
     gc = pygsheets.authorize(service_file="oddstool-fdc41ddfa8e3.json")
