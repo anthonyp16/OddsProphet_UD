@@ -63,9 +63,8 @@ def highlight_above_val(val):
 # Data Filtering
 # --------------------
 def filter_dataframe(df: pd.DataFrame, enable_filter: bool) -> pd.DataFrame:
-    st.subheader("PrizePicks Props")
+    st.subheader("Underdog Fantasy Props")
 
-    # Convert datetime columns once
     for col in df.columns:
         if is_object_dtype(df[col]):
             try:
