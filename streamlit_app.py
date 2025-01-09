@@ -179,7 +179,7 @@ sim_col1, sim_col2 = st.columns(2)
 with sim_col1:
     simulate_free_square = st.checkbox("Simulate Free Square", value=False)
 with sim_col2:
-    simulate_taco = st.checkbox("Simulate Taco :taco:", value=False)
+    simulate_dp = st.checkbox("Simulate Discounted Pick", value=False)
 
 max_picks = 6
 current_picks = len(selected_bets)
@@ -192,8 +192,8 @@ else:
         new_row = pd.DataFrame([{"Sport": "SIMULATED FREE SQUARE", "Probability": 99.0}])
         selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
         available_spots -= 1
-    if simulate_taco and available_spots > 0:
-        new_row = pd.DataFrame([{"Sport": "SIMULATED TACO", "Probability": 63.0}])
+    if simulate_dp and available_spots > 0:
+        new_row = pd.DataFrame([{"Sport": "SIMULATED DISCOUNTED PICK", "Probability": 63.0}])
         selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
         available_spots -= 1
 
