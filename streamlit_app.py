@@ -193,7 +193,7 @@ else:
         selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
         available_spots -= 1
     if simulate_dp and available_spots > 0:
-        new_row = pd.DataFrame([{"Sport": "SIMULATED DISCOUNTED PICK", "Probability": 63.0}])
+        new_row = pd.DataFrame([{"Sport": "SIMULATED DISCOUNTED PICK", "Probability": 60.0}])
         selected_bets = pd.concat([selected_bets, new_row], ignore_index=True)
         available_spots -= 1
 
