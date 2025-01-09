@@ -128,6 +128,8 @@ df, last_updated_str = load_data(st.secrets["public_gsheets_url"])
 df.columns = df.columns.str.replace('Over', 'O')
 df.columns = df.columns.str.replace('Under', 'U')
 sportsbooks = df.columns[df.columns.get_loc('Best Odds')+1:-1].to_list()
+df['Start'] = pd.to_datetime(df['Start'])
+df['Start'] = df['Start'].dt.strftime("%a %I:%M %p")
 
 # -------------
 # Filter & Show
@@ -136,12 +138,12 @@ filtered_df = filter_dataframe(df, enable_filter=modify)
 displayed_df = filtered_df.copy()
 displayed_sportsbooks = sportsbooks.copy()
 
-# Optionally hide sportsbooks
+
 if not show_sportsbooks:
     displayed_df.drop(columns=sportsbooks, inplace=True)
     displayed_sportsbooks = []
 
-# Styling
+
 format_dict = {'Line': '{:.1f}', 'Probability': '{:.1f}%', 'Best Odds': '{:.0f}'}
 format_dict.update({col: '{:.0f}' for col in displayed_sportsbooks})
 styled_df = displayed_df.style.format(format_dict)
@@ -155,13 +157,12 @@ if displayed_sportsbooks:
 if 'Probability' in displayed_df.columns:
     styled_df = styled_df.applymap(highlight_above_val, subset=['Probability'])
 
-# Selectable data
 event = st.dataframe(
     styled_df,
     use_container_width=True,
     hide_index=True,
-    on_select="rerun",      # Re-run app on selection
-    selection_mode="multi-row"  # Enable multi-row selection
+    on_select="rerun",      
+    selection_mode="multi-row" 
 )
 selected_rows = event.selection.rows if event.selection is not None else []
 selected_bets = displayed_df.iloc[selected_rows, :7] if len(selected_rows) > 0 else pd.DataFrame()
@@ -199,9 +200,8 @@ else:
 num_picks = len(selected_bets)
 
 if num_picks > 0:
-    # Convert probabilities to fractions
     probs = (selected_bets['Probability'] / 100).values
-    p_all = math.prod(probs)  # Probability of all correct
+    p_all = math.prod(probs) 
 
     def prob_exact_k(prbs, k):
         total = 0
@@ -235,7 +235,6 @@ if num_picks > 0:
 
     container = st.container()
 
-    # Show Power EV
     if power_ev is not None:
         container.write(
             f"**Power Play EV:** {' :blue[{:.2f}]'.format(power_ev) if power_ev > 0 else f'{power_ev:.2f}'}"
@@ -243,7 +242,6 @@ if num_picks > 0:
     else:
         container.write("**Power Play** not available for this number of picks.")
 
-    # Show Flex EV
     if flex_ev is not None:
         container.write(
             f"**Flex Play EV:** {' :blue[{:.2f}]'.format(flex_ev) if flex_ev > 0 else f'{flex_ev:.2f}'}"
