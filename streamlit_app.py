@@ -233,7 +233,7 @@ if num_picks > 0:
     st.text("Selected Bets:")
     st.dataframe(selected_bets, use_container_width=True, hide_index=True)
 
-    container = st.container()
+    container = st.container(border=True)
 
     if power_ev is not None:
         container.write(
