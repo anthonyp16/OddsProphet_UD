@@ -240,11 +240,11 @@ if num_picks > 0:
             f"**{num_picks}-Standard Play EV:** {' :blue[{:.2f}]'.format(power_ev) if power_ev > 0 else f'{power_ev:.2f}'}"
         )
     else:
-        container.write("**{num_picks}-Power Play** not available for this number of picks.")
+        container.write("**Power Play** not available for this number of picks.")
 
     if flex_ev is not None:
         container.write(
-            f"**Flex Play EV:** {' :blue[{:.2f}]'.format(flex_ev) if flex_ev > 0 else f'{flex_ev:.2f}'}"
+            f"**{num_picks}-Flex Play EV:** {' :blue[{:.2f}]'.format(flex_ev) if flex_ev > 0 else f'{flex_ev:.2f}'}"
         )
     else:
         container.write("**Flex Play** not available for this number of picks.")
