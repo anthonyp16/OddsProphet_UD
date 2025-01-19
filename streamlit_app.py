@@ -237,7 +237,7 @@ if num_picks > 0:
 
     if power_ev is not None:
         container.write(
-            f"**{num_picks]-Standard Play EV:** {' :blue[{:.2f}]'.format(power_ev) if power_ev > 0 else f'{power_ev:.2f}'}"
+            f"**{num_picks}-Standard Play EV:** {' :blue[{:.2f}]'.format(power_ev) if power_ev > 0 else f'{power_ev:.2f}'}"
         )
     else:
         container.write("**{num_picks}-Power Play** not available for this number of picks.")
