@@ -128,8 +128,7 @@ df, last_updated_str = load_data(st.secrets["public_gsheets_url"])
 df.columns = df.columns.str.replace('over', 'O')
 df.columns = df.columns.str.replace('under', 'U')
 sportsbooks = df.columns[df.columns.get_loc('Best Odds')+1:-1].to_list()
-df['Start'] = pd.to_datetime(df['Start'])
-df['Start'] = df['Start'].dt.strftime("%a %I:%M %p")
+
 
 # -------------
 # Filter & Show
