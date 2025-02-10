@@ -29,7 +29,7 @@ def get_sheet_update_time() -> str:
     eastern_time = updated_time_utc.astimezone(ZoneInfo("America/New_York"))
     return eastern_time.strftime("%-m/%-d/%y %I:%M %p %Z")
 
-@st.cache_data(ttl="4m")
+@st.cache_data(ttl="3m")
 def load_data(sheets_url: str):
 
     csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
